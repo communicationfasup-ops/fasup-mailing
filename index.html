@@ -405,6 +405,28 @@
     }
     .subject-copy-btn:hover { background: #f0ece6; border-color: #c8c0b8; }
     .subject-copy-btn.done  { background: #F59D00; border-color: #F59D00; color: white; }
+
+    /* ── Barre preheader ── */
+    .preheader-bar {
+      display: none; align-items: center; gap: 12px;
+      padding: 9px 18px;
+      background: #fdf9f4;
+      border-bottom: 1px solid #f0ece6;
+    }
+    .preheader-bar.visible { display: flex; }
+    .preheader-label-tag {
+      font-size: 10px; font-weight: 800; color: #b0a090;
+      text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0;
+    }
+    .preheader-value { font-size: 13px; font-weight: 600; color: #6a5a4a; flex: 1; min-width: 0; }
+    .preheader-copy-btn {
+      flex-shrink: 0; padding: 4px 12px;
+      border: 1px solid #e0d8d0; border-radius: 4px;
+      background: white; font-size: 11px; font-weight: 700; color: #7a6a5a;
+      cursor: pointer; font-family: inherit; transition: all 0.15s;
+    }
+    .preheader-copy-btn:hover { background: #f0ece6; border-color: #c8c0b8; }
+    .preheader-copy-btn.done  { background: #F59D00; border-color: #F59D00; color: white; }
   </style>
 </head>
 <body>
@@ -465,6 +487,14 @@
       <span class="subject-ref" id="subject-ref"></span>
     </div>
     <button class="subject-copy-btn" id="subject-copy-btn" onclick="copySubject()">📋 Copier l'objet</button>
+  </div>
+  <!-- Preheader mail -->
+  <div class="preheader-bar" id="preheader-bar">
+    <div class="subject-content">
+      <span class="preheader-label-tag">Preheader</span>
+      <span class="preheader-value" id="preheader-value"></span>
+    </div>
+    <button class="preheader-copy-btn" id="preheader-copy-btn" onclick="copyPreheader()">📋 Copier le preheader</button>
   </div>
   <!-- Onglets -->
   <div class="tabs" id="tabs-row" style="display:none">
@@ -593,7 +623,7 @@ const FOOTER = `
 /* ================================================================
    MAIL #1 — Reprise de contact
    ================================================================ */
-const MAIL1_SUBJECT = 'Disponibilit%C3%A9%20pour%20un%20rappel';
+const MAIL1_SUBJECT = 'Disponibilit%C3%A9%20pour%20un%20appel';
 const MAIL1_BODY    = 'Salut%20l%E2%80%99%C3%A9quipe%20FASUP%E2%80%99%2C%0D%0A%0D%0AJe%20suis%20dispo%20pour%20qu%E2%80%99on%20%C3%A9change%20sur%20mon%20projet%20d%E2%80%99alternance.%0D%0A%0D%0AMes%20disponibilit%C3%A9s%20%3A%20%5BDATE%20%2F%20CR%C3%89NEAU%5D%0D%0A%0D%0AMerci%2C%0D%0A%0D%0A%5BPr%C3%A9nom%20Nom%5D';
 
 function generateMail1(email) {
@@ -3367,6 +3397,25 @@ function execCopy(text) {
   document.body.removeChild(ta);
 }
 
+/* ── Extraire le preheader du code généré ── */
+function extractPreheader(html) {
+  const match = html.match(/<div style="display:none[^>]*>([^<]+)<\/div>/);
+  return match ? match[1].trim() : null;
+}
+
+/* ── Copier le preheader ── */
+function copyPreheader() {
+  const preheader = extractPreheader(currentCode);
+  if (!preheader) return;
+  copyToClipboard(preheader).then(() => {
+    const btn = document.getElementById('preheader-copy-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copié !';
+    btn.classList.add('done');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('done'); }, 1500);
+  });
+}
+
 /* ── Copier l'objet du mail ── */
 function copySubject() {
   if (!selectedMail?.subject || !selectedCity) return;
@@ -3400,6 +3449,16 @@ function refreshCode() {
     subjectBar.classList.add('visible');
   } else {
     subjectBar.classList.remove('visible');
+  }
+
+  // Barre preheader
+  const preheaderBar = document.getElementById('preheader-bar');
+  const preheader = extractPreheader(currentCode);
+  if (preheader) {
+    document.getElementById('preheader-value').textContent = preheader;
+    preheaderBar.classList.add('visible');
+  } else {
+    preheaderBar.classList.remove('visible');
   }
 
   document.getElementById('tabs-row').style.display = '';
